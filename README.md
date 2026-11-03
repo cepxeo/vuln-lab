@@ -3,7 +3,8 @@
 Intentionally vulnerable targets for testing ScanSuite's AI pentest, DAST and
 infrastructure scanners on any machine with Docker: the three local-lab stacks
 (Lab A, B, C) and the vulnerability zoo, in one compose file, published as
-`appsec4u/vuln-lab` on Docker Hub (private).
+`appsec4u/vuln-lab` on Docker Hub (public: the images hold only the lab
+applications and unchanged public middleware).
 
 **Every service here is exploitable on purpose.** Run it only on a host you
 control, reachable by the scanner and not from the internet.
@@ -38,11 +39,9 @@ under emulation, slowly. Everything else is built for amd64 and arm64.
 
 ## On a test machine
 
-You need Docker with the compose plugin and an appsec4u Docker Hub token with
-read access.
+You need Docker with the compose plugin; the images are public, so no login.
 
 ```bash
-docker login -u appsec4u                    # paste the read token
 mkdir vuln-lab && cd vuln-lab
 # copy docker-compose.yml, docker-compose.host.yml and .env.example from this folder
 cp .env.example .env                        # set VULN_LAB_TAG to pin a build; latest is the last published
