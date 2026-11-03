@@ -1,0 +1,14 @@
+{
+  "name": "taskhub",
+  "version": "1.2.0",
+  "description": "Lightweight team task board API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.19.2",
+    "cookie-parser": "1.4.6",
+    "jsonwebtoken": "9.0.2"
+  }
+}

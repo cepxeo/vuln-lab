@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>ClaimDesk — Dashboard</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;background:#f5f7fa;margin:0;color:#1d2b36}
+    header{background:#0f3d61;color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
+    header a{color:#cfe3f5;font-size:13px}
+    .wrap{max-width:900px;margin:24px auto;padding:0 16px}
+    .bar{display:flex;gap:8px;margin-bottom:16px}
+    input{padding:8px 10px;border:1px solid #cdd7df;border-radius:6px}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
+    th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #eef1f4;font-size:14px}
+    th{background:#f0f4f8;color:#5a6b78}
+  </style>
+</head>
+<body>
+  <header>
+    <div>ClaimDesk — <span th:text="${user.fullName}">User</span> (<span th:text="${user.role}">role</span>)</div>
+    <div><a href="/claims/search?q=">Search</a> &middot; <a href="/logout">Sign out</a></div>
+  </header>
+  <div class="wrap">
+    <form class="bar" method="get" action="/claims/search">
+      <input name="q" placeholder="Search claims…" style="flex:1"/>
+      <button type="submit">Search</button>
+    </form>
+    <table>
+      <tr><th>#</th><th>Claim</th><th>Title</th><th>Status</th><th>Amount</th></tr>
+      <tr th:each="c : ${claims}">
+        <td th:text="${c.id}"></td>
+        <td><a th:href="'/claim/' + ${c.id}" th:text="${c.claim_no}"></a></td>
+        <td th:text="${c.title}"></td>
+        <td th:text="${c.status}"></td>
+        <td th:text="${c.amount}"></td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

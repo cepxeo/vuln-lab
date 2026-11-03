@@ -1,0 +1,16 @@
+# The zoo on the host's network instead of published ports, for Docker Desktop:
+# its port forwarding stalled under a scanner's load (README.md). The zoo listens
+# on the ports it reports, so nothing changes in its targets. Docker Desktop 4.34
+# or later, with Settings > Resources > Network > "Enable host networking" on.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.host.yml --profile zoo-smoke up -d
+#
+# Not for the labs: their apps listen on fixed in-container ports (8080, 3000,
+# ...) that would clash on the host and differ from the ground truth's.
+services:
+  zoo-smoke:
+    network_mode: host
+    ports: !reset []
+  zoo-all:
+    network_mode: host
+    ports: !reset []

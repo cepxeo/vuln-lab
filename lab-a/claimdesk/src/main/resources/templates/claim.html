@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>ClaimDesk — Claim</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;background:#f5f7fa;margin:0;color:#1d2b36}
+    .wrap{max-width:720px;margin:28px auto;padding:0 16px}
+    .card{background:#fff;border-radius:8px;padding:20px 24px;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+    dt{color:#6b7a88;font-size:12px;margin-top:12px}
+    dd{margin:2px 0 0;font-size:15px}
+    a{color:#0f6fc5}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="/dashboard">&larr; Back</a></p>
+    <div class="err" th:if="${error}" th:text="${error}"></div>
+    <div class="card" th:if="${claim}">
+      <h2 th:text="${claim.claim_no}">CLM</h2>
+      <dl>
+        <dt>Title</dt><dd th:utext="${claim.title}"></dd>
+        <dt>Policy</dt><dd th:text="${claim.policy_no}"></dd>
+        <dt>Status</dt><dd th:text="${claim.status}"></dd>
+        <dt>Amount</dt><dd th:text="${claim.amount}"></dd>
+        <dt>Description</dt><dd th:utext="${claim.description}"></dd>
+        <dt>Adjuster notes</dt><dd th:text="${claim.adjuster_notes}"></dd>
+        <dt>Payout IBAN</dt><dd th:text="${claim.bank_iban}"></dd>
+      </dl>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,177 @@
+# The benchmark labs and the vulnerability zoo (README.md). Every service here
+# is intentionally vulnerable: run it only on a host you control, never exposed
+# to the internet.
+#
+#   docker compose --profile lab-a --profile lab-c up -d    # any mix of profiles
+#   docker compose --profile zoo-smoke up -d                # needs ZOO_ADDRESS
+#
+# Profiles: lab-a, lab-b, lab-c, zoo-smoke, zoo-all. Images come from
+# appsec4u/vuln-lab (docker compose pull) or are built from this folder
+# (build.sh). The published ports are the local lab's, so the bench ground truth
+# (tools/lab/bench/ground_truth) applies unchanged; each can be moved in .env.
+
+name: vuln-lab
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  # -- Lab A: round-4 host A (GROUND_TRUTH-r4.md, "Host A") ----------------------
+  claimdesk:
+    <<: *restart
+    profiles: [lab-a]
+    image: appsec4u/vuln-lab:claimdesk-${VULN_LAB_TAG:-latest}
+    build: ./lab-a/claimdesk
+    ports:
+      - "${CLAIMDESK_PORT:-8101}:8085"
+    networks: [lab-a]
+
+  # GeoServer 2.23.1, CVE-2024-36401 (CISA KEV). Fingerprintable by its version on
+  # /geoserver/web and /geoserver/ows?request=GetCapabilities.
+  geoserver:
+    <<: *restart
+    profiles: [lab-a]
+    image: appsec4u/vuln-lab:geoserver-${VULN_LAB_TAG:-latest}
+    build: ./lab-a/geoserver
+    platform: linux/amd64
+    environment:
+      - SKIP_DEMO_DATA=false
+    ports:
+      - "${GEOSERVER_PORT:-8102}:8080"
+    networks: [lab-a]
+
+  # -- Lab B: round-4 host B (GROUND_TRUTH-r4.md, "Host B") ----------------------
+  larder:
+    <<: *restart
+    profiles: [lab-b]
+    image: appsec4u/vuln-lab:larder-${VULN_LAB_TAG:-latest}
+    build: ./lab-b/larder
+    ports:
+      - "${LARDER_PORT:-8201}:5020"
+    networks: [lab-b]
+
+  # Metabase v0.46.6, CVE-2023-38646 (CISA KEV). Version at
+  # /api/session/properties ("version.tag").
+  metabase:
+    <<: *restart
+    profiles: [lab-b]
+    image: appsec4u/vuln-lab:metabase-${VULN_LAB_TAG:-latest}
+    build: ./lab-b/metabase
+    platform: linux/amd64
+    ports:
+      - "${METABASE_PORT:-8202}:3000"
+    networks: [lab-b]
+
+  # -- Lab C: round-3 benchmark (lab-c/BENCHMARK.md) -----------------------------
+  # Three demo apps behind a mis-configured nginx edge, a false-positive trap and
+  # an unauthenticated Redis reachable from Lab C's network as a pivot target.
+  shopfront:
+    <<: *restart
+    profiles: [lab-c]
+    image: appsec4u/vuln-lab:shopfront-${VULN_LAB_TAG:-latest}
+    build: ./lab-c/apps/shopfront
+    environment:
+      - MEDIA_ALLOW=cdn.shop.local,images.shop.local
+      - REDIS_URL=redis://cache:6379/0
+    ports:
+      - "${SHOPFRONT_PORT:-8301}:5001"
+    networks: [lab-c]
+
+  taskhub:
+    <<: *restart
+    profiles: [lab-c]
+    image: appsec4u/vuln-lab:taskhub-${VULN_LAB_TAG:-latest}
+    build: ./lab-c/apps/taskhub
+    environment:
+      - TASKHUB_SECRET=taskhub-dev-secret
+    ports:
+      - "${TASKHUB_PORT:-8302}:5002"
+    networks: [lab-c]
+
+  gateway:
+    <<: *restart
+    profiles: [lab-c]
+    image: appsec4u/vuln-lab:gateway-${VULN_LAB_TAG:-latest}
+    build: ./lab-c/apps/gateway
+    ports:
+      - "${GATEWAY_PORT:-8303}:5003"
+    networks: [lab-c]
+
+  # False-positive trap (no planted flaw): reflects input safely; any finding on
+  # it is a false positive (tools/lab/bench/ground_truth/lab-c.yaml, N2).
+  echo:
+    <<: *restart
+    profiles: [lab-c]
+    image: appsec4u/vuln-lab:echo-${VULN_LAB_TAG:-latest}
+    build: ./lab-c/apps/echo
+    ports:
+      - "${ECHO_PORT:-8307}:5007"
+    networks: [lab-c]
+
+  # No password; reachable by the apps and by anything that can pivot onto the
+  # network.
+  cache:
+    <<: *restart
+    profiles: [lab-c]
+    image: appsec4u/vuln-lab:redis-${VULN_LAB_TAG:-latest}
+    build: ./lab-c/redis
+    ports:
+      - "${REDIS_PORT:-8306}:6379"
+    networks: [lab-c]
+
+  edge:
+    <<: *restart
+    profiles: [lab-c]
+    image: appsec4u/vuln-lab:edge-${VULN_LAB_TAG:-latest}
+    build: ./lab-c/edge
+    ports:
+      - "${EDGE_PORT:-8300}:80"
+    depends_on:
+      - shopfront
+      - taskhub
+      - gateway
+    networks: [lab-c]
+
+  # -- The zoo (tools/zoo/README.md) ---------------------------------------------
+  # Its ground truth and target list are written to ./zoo-out for tools/zoo/smoke.py.
+  # The container listens on the published ports, so the target list is right:
+  # ZOO_SAFE_PORT must be ZOO_PORT + 50.
+  zoo-smoke:
+    <<: *restart
+    profiles: [zoo-smoke]
+    image: appsec4u/vuln-lab:zoo-${VULN_LAB_TAG:-latest}
+    build:
+      context: ../../services/server
+      dockerfile: ../../images/vuln_lab/zoo/Dockerfile
+    environment:
+      - ZOO_PROFILE=smoke
+      - ZOO_PORT=${ZOO_PORT:-9100}
+      - ZOO_ADDRESS=${ZOO_ADDRESS:-}
+    ports:
+      - "${ZOO_PORT:-9100}:${ZOO_PORT:-9100}"
+      - "${ZOO_SAFE_PORT:-9150}:${ZOO_SAFE_PORT:-9150}"
+    volumes:
+      - ./zoo-out:/out
+
+  # Every live case on its own port: 40 targets, lab-scan size and cost.
+  zoo-all:
+    <<: *restart
+    profiles: [zoo-all]
+    image: appsec4u/vuln-lab:zoo-${VULN_LAB_TAG:-latest}
+    build:
+      context: ../../services/server
+      dockerfile: ../../images/vuln_lab/zoo/Dockerfile
+    environment:
+      - ZOO_PROFILE=all
+      - ZOO_PORT=9100
+      - ZOO_ADDRESS=${ZOO_ADDRESS:-}
+    ports:
+      - "9100-9119:9100-9119"
+      - "9150-9169:9150-9169"
+    volumes:
+      - ./zoo-out:/out
+
+networks:
+  lab-a:
+  lab-b:
+  lab-c:

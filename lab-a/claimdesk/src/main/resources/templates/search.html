@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>ClaimDesk — Search</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;background:#f5f7fa;margin:0;color:#1d2b36}
+    .wrap{max-width:820px;margin:28px auto;padding:0 16px}
+    input{padding:8px 10px;border:1px solid #cdd7df;border-radius:6px;width:60%}
+    .hit{background:#fff;border-radius:8px;padding:12px 16px;margin:10px 0;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+    .err{background:#fde8e8;color:#9b2c2c;padding:8px 10px;border-radius:6px;font-size:13px;word-break:break-all}
+    a{color:#0f6fc5}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="/dashboard">&larr; Back</a></p>
+    <form method="get" action="/claims/search">
+      <input name="q" th:value="${q}"/>
+      <button type="submit">Search</button>
+    </form>
+    <p>Results for &ldquo;<span th:utext="${q}">q</span>&rdquo;</p>
+    <div class="err" th:if="${error}" th:text="${error}"></div>
+    <div class="hit" th:each="r : ${results}">
+      <a th:href="'/claim/' + ${r.id}"><span th:utext="${r.title}"></span></a>
+      <div th:utext="${r.description}"></div>
+      <small th:text="${r.status}"></small>
+    </div>
+  </div>
+</body>
+</html>
