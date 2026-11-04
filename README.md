@@ -11,6 +11,31 @@ scored.
 **Every service here is exploitable on purpose.** Run it only on a host you
 control, reachable by the scanner and not from the internet.
 
+## Quick start
+
+You need Docker with the compose plugin, on Linux (Docker Engine) or macOS. On
+Windows, use a WSL distribution or a Linux VM with its own Docker Engine (see
+[Docker Desktop](#docker-desktop)). No login or settings are needed.
+
+```bash
+git clone https://github.com/cepxeo/vuln-lab && cd vuln-lab
+./run.sh            # pulls and starts Lab A, B and C, waits until every service answers
+```
+
+When it is ready, `run.sh` prints the scan targets. Other commands:
+
+```bash
+./run.sh lab-c      # only some labs: lab-a lab-b lab-c, zoo (2 targets), zoo-all (40 targets)
+./run.sh zoo        # the zoo; its targets and ground truth go to zoo-out/
+./run.sh status     # what runs and whether it answers
+./run.sh down       # stop and remove everything
+```
+
+Defaults: the `latest` images, the ports in the table below, and, for the zoo,
+this host's first network address as the address the scanner reaches. To change
+any of them, copy `.env.example` to `.env` and set it there (for example,
+`VULN_LAB_TAG` pins a published build).
+
 ## What is in it
 
 | Profile | Service | Port | What it is |
@@ -38,27 +63,27 @@ upstream build by digest in its Dockerfile and copied to `appsec4u/vuln-lab`
 unchanged. GeoServer and Metabase exist for amd64 only; on an ARM host they run
 under emulation, slowly. Everything else is built for amd64 and arm64.
 
-## Run it
+## Run it with docker compose
 
-You need Docker with the compose plugin.
+`run.sh` is a wrapper around these commands; use them directly for anything it
+does not cover. Without a `.env` the defaults apply (tag `latest`, the ports
+above).
 
 ```bash
-git clone https://github.com/cepxeo/vuln-lab && cd vuln-lab
-cp .env.example .env                        # VULN_LAB_TAG pins a build; latest is the last published
 docker compose --profile lab-a --profile lab-b --profile lab-c pull
 docker compose --profile lab-a --profile lab-b --profile lab-c up -d
 ./probe.sh lab-a lab-b lab-c                # every service answers, the middleware with its vulnerable version
 ```
 
-The images are public, so no `docker login` is needed. Any mix of
-profiles works. Stop with `docker compose --profile <...> down`. GeoServer and
-Metabase take a minute or two to start.
+The images are public, so no `docker login` is needed. Any mix of profiles
+works. Stop with `docker compose --profile <...> down`. GeoServer and Metabase
+take a minute or two to start.
 
-The zoo writes its ground truth and target list for the scan:
+The zoo writes its ground truth and target list for the scan. It needs the
+address the scanner reaches this host at:
 
 ```bash
-echo "ZOO_ADDRESS=<the address the scanner reaches this host at>" >> .env
-docker compose --profile zoo-smoke up -d
+ZOO_ADDRESS=<address> docker compose --profile zoo-smoke up -d
 cat zoo-out/targets.txt                     # the scan targets; zoo-out/zoo.yaml is the ground truth
 ```
 
@@ -130,6 +155,7 @@ scansuite-teams checkout.
 docker-compose.yml       every service; profiles lab-a, lab-b, lab-c, zoo-smoke, zoo-all
 docker-compose.host.yml  the zoo on the host network (Docker Desktop)
 .env.example             tag, zoo address, port overrides
+run.sh                   start, stop and check the labs with the defaults (Quick start)
 build.sh, probe.sh       build and publish; check that a profile answers
 ground_truth/            the planted flaws of each lab, machine-readable
 GROUND_TRUTH-r4.md       Lab A and B, described
