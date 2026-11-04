@@ -1,5 +1,0 @@
-# The build context is services/server; the zoo needs only these.
-*
-!authorization_tests/__init__.py
-!authorization_tests/vulnzoo/
-authorization_tests/vulnzoo/**/__pycache__

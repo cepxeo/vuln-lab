@@ -1,0 +1,19 @@
+# Lab B: round-4 host B (GROUND_TRUTH-r4.md, "Host B").
+# Schema: README.md, "Ground truth".
+stack: lab-b
+services:
+  larder: [8201]
+  metabase: [8202]
+items:
+  - {id: B1, title: Weak credentials / no password policy, service: larder, classes: [weak_credentials], paths: [/api/login, /api/register]}
+  - {id: B2, title: SQL injection, service: larder, classes: [sql_injection], paths: [/api/login, /api/items/search]}
+  - {id: B3, title: Broken access control (IDOR), service: larder, classes: [idor], paths: [/api/lists/]}
+  - {id: B4, title: JWT alg=none / weak secret, service: larder, classes: [jwt]}
+  - {id: B5, title: Mass assignment / privilege escalation, service: larder, classes: [mass_assignment], paths: [/api/profile]}
+  - {id: B6, title: SSRF, service: larder, classes: [ssrf], paths: [/api/import]}
+  - {id: B7, title: Stored XSS, service: larder, classes: [xss], paths: [/api/lists, /api/items]}
+  - {id: B8, title: Prototype pollution, service: larder, classes: [prototype_pollution], paths: [/api/prefs]}
+  - {id: B9, title: Path traversal / LFI, service: larder, classes: [path_traversal], paths: [/api/export]}
+  - {id: B10, title: Verbose errors, service: larder, classes: [verbose_errors]}
+  - {id: B-CVE, title: Metabase pre-auth RCE CVE-2023-38646 (KEV), service: metabase, classes: [cve], cve: CVE-2023-38646, needs: [poc]}
+negatives: []

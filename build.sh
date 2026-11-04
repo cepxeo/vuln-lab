@@ -31,7 +31,7 @@ context_of() {
     larder) echo lab-b/larder ;;
     shopfront|taskhub|gateway|echo) echo "lab-c/apps/$1" ;;
     edge) echo lab-c/edge ;;
-    zoo) echo ../../services/server ;;
+    zoo) echo zoo ;;
     geoserver) echo lab-a/geoserver ;;
     metabase) echo lab-b/metabase ;;
     redis) echo lab-c/redis ;;
@@ -40,7 +40,7 @@ context_of() {
 }
 
 dockerfile_of() {
-  if [ "$1" = zoo ]; then echo zoo/Dockerfile; else echo "$(context_of "$1")/Dockerfile"; fi
+  echo "$(context_of "$1")/Dockerfile"
 }
 
 # The upstream image a copied name is pinned to: its Dockerfile's FROM.
@@ -87,9 +87,13 @@ ensure_builder() {
 
 if [ "$mode" = push ]; then
   [ "$tag" = "$commit" ] || { echo "--push tags the commit; drop --tag" >&2; exit 2; }
-  if [ -n "$(git status --porcelain -- . ../../services/server/authorization_tests/vulnzoo)" ]; then
-    echo "Uncommitted changes under images/vuln_lab or the zoo: commit and push them first." >&2
+  if [ -n "$(git status --porcelain -- .)" ]; then
+    echo "Uncommitted changes in this folder: commit and push them first." >&2
     exit 1
+  fi
+  # In the scansuite-teams checkout, the zoo copy must match the zoo it came from.
+  if [ -d ../../services/server/authorization_tests/vulnzoo ]; then
+    zoo/sync.sh --check
   fi
   git fetch -q origin main
   git merge-base --is-ancestor HEAD origin/main || {
@@ -99,7 +103,7 @@ if [ "$mode" = push ]; then
 fi
 
 labels=(--label "org.opencontainers.image.revision=$commit"
-        --label "org.opencontainers.image.source=https://github.com/cepxeo/scansuite-teams/tree/$commit/images/vuln_lab")
+        --label "org.opencontainers.image.source=https://github.com/cepxeo/vuln-lab")
 
 for name in "${names[@]}"; do
   context="$(context_of "$name")"

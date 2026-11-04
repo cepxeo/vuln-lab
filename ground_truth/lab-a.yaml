@@ -1,0 +1,27 @@
+# Lab A: round-4 host A (GROUND_TRUTH-r4.md, "Host A").
+# Schema: README.md, "Ground truth".
+stack: lab-a
+services:
+  claimdesk: [8101]
+  geoserver: [8102]
+items:
+  - {id: A1, title: Weak credentials / no password policy, service: claimdesk, classes: [weak_credentials], paths: [/login, /register]}
+  - {id: A2, title: SQL injection, service: claimdesk, classes: [sql_injection], paths: [/login, /claims/search]}
+  - {id: A3, title: Broken access control (IDOR), service: claimdesk, classes: [idor], paths: [/claim/]}
+  - {id: A4, title: Stored / reflected XSS, service: claimdesk, classes: [xss], paths: [/claim, /claims/search]}
+  - {id: A5, title: Path traversal / LFI, service: claimdesk, classes: [path_traversal], paths: [/document]}
+  - {id: A6, title: Server-side template injection, service: claimdesk, classes: [ssti], paths: [/tools/preview]}
+  - {id: A7, title: Insecure deserialization (blind), service: claimdesk, classes: [deserialization], paths: [/recent], needs: [oob]}
+  - {id: A8, title: Spring Boot Actuator exposure, service: claimdesk, classes: [exposed_endpoint], paths: [/actuator]}
+  - {id: A9, title: H2 console exposed, service: claimdesk, classes: [exposed_endpoint], paths: [/h2-console]}
+  - {id: A10, title: Verbose errors / stack traces, service: claimdesk, classes: [verbose_errors]}
+  - {id: A11, title: Secrets in config / environment, service: claimdesk, classes: [secret_exposure], paths: [/actuator/env]}
+  # CVE-2024-36404 is the GeoTools id of the same flaw: GeoServer hands OGC property
+  # names to GeoTools' XPath evaluation (commons-jxpath), which runs code; nuclei
+  # reports the GeoServer exploit under the GeoTools id.
+  - {id: A-CVE, title: GeoServer RCE CVE-2024-36401 (KEV), service: geoserver, classes: [cve], cve: CVE-2024-36401, cve_aliases: [CVE-2024-36404], needs: [poc]}
+negatives:
+  # POST /register binds the username as a parameter (AuthController.register,
+  # "VALUES (?,?,?,?, 'customer')"); a true/false difference there is the UNIQUE
+  # or length constraint, not injection.
+  - {id: NA1, title: Parameterised insert on registration, service: claimdesk, classes: [sql_injection], paths: [/register]}

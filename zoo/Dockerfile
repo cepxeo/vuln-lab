@@ -1,17 +1,15 @@
-# The vulnerability zoo (tools/zoo/README.md, tier 3) as a container: the apps
-# of services/server/authorization_tests/vulnzoo, the code the unit suite tests,
-# served by its standard-library server. Build context: services/server
-# (compose and build.sh pass it), so the image is always the tested zoo.
+# The vulnerability zoo as a container: small vulnerable apps, each with a safe
+# twin, served by one standard-library Python process (app/, a copy of the
+# modules the zoo server needs; zoo/sync.sh keeps it current).
 #
 #   ZOO_PROFILE  smoke (6 apps on ZOO_PORT, their safe twins 50 above) or all
 #                (20 apps on 9100-9119, twins on 9150-9169)
 #   ZOO_PORT     the first port (smoke only; the safe origin is ZOO_PORT + 50)
 #   ZOO_ADDRESS  the address the scanner reaches this host at: it goes into
-#                /out/zoo.yaml (the bench ground truth) and /out/targets.txt
+#                /out/zoo.yaml (the ground truth) and /out/targets.txt
 FROM python:3.12-slim
 WORKDIR /zoo
-COPY authorization_tests/__init__.py authorization_tests/__init__.py
-COPY authorization_tests/vulnzoo authorization_tests/vulnzoo
+COPY app/ /zoo/
 RUN mkdir -p /out
 ENV ZOO_PROFILE=smoke ZOO_PORT=9100 ZOO_ADDRESS="" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 EXPOSE 9100-9119 9150-9169

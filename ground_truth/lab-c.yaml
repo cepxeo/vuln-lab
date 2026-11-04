@@ -1,0 +1,47 @@
+# Lab C: round-3 benchmark (lab-c/BENCHMARK.md). The nginx edge
+# on 8300 proxies /shop/, /tasks/ and /gw/ to the three apps, which are also
+# published directly. Items marked pentest: false are source-only (hashing,
+# constants, TLS settings) and are left out of the pentest recall.
+# Schema: README.md, "Ground truth".
+stack: lab-c
+services:
+  shopfront: [8301, 8300]
+  taskhub: [8302, 8300]
+  gateway: [8303, 8300]
+  edge: [8300]
+  redis: [8306]
+  echo: [8307]
+items:
+  - {id: S1, title: SQL injection in catalog search, service: shopfront, classes: [sql_injection], paths: [/catalog/search]}
+  - {id: S2, title: OS command injection in media export, service: shopfront, classes: [command_injection], paths: [/media/export]}
+  - {id: S3, title: SSRF in media preview, service: shopfront, classes: [ssrf], paths: [/media/preview]}
+  - {id: S4, title: Insecure deserialization of the session token, service: shopfront, classes: [deserialization], paths: [/account/session/restore]}
+  - {id: S5, title: Weak password hashing, service: shopfront, classes: [weak_crypto], pentest: false}
+  - {id: S6, title: Hardcoded secret default, service: shopfront, classes: [secret_exposure], pentest: false}
+  - {id: S7, title: CORS origin reflection with credentials, service: shopfront, classes: [cors]}
+  - {id: S8, title: Admin gate bypass via X-Forwarded-For, service: shopfront, classes: [auth_bypass], paths: [/admin]}
+  - {id: T1, title: JWT alg none accepted, service: taskhub, classes: [jwt]}
+  - {id: T2, title: Prototype pollution in settings, service: taskhub, classes: [prototype_pollution], paths: [/settings]}
+  - {id: T3, title: Path traversal via encoded dots, service: taskhub, classes: [path_traversal], paths: [/files/]}
+  - {id: T4, title: SSRF in webhook test, service: taskhub, classes: [ssrf], paths: [/webhooks/test]}
+  - {id: T5, title: Reflected XSS in search header, service: taskhub, classes: [xss], paths: [/search]}
+  - {id: T6, title: IDOR on a single task, service: taskhub, classes: [idor], paths: [/tasks/]}
+  - {id: T7, title: Weak password hashing, service: taskhub, classes: [weak_crypto], pentest: false}
+  - {id: T8, title: CORS origin reflection with credentials, service: taskhub, classes: [cors]}
+  - {id: G1, title: SSRF in proxy, service: gateway, classes: [ssrf], paths: [/proxy]}
+  - {id: G2, title: OS command injection in diag, service: gateway, classes: [command_injection], paths: [/diag]}
+  - {id: G3, title: Open redirect, service: gateway, classes: [open_redirect], paths: [/go]}
+  - {id: G4, title: Hardcoded credentials, service: gateway, classes: [secret_exposure], pentest: false}
+  - {id: G5, title: TLS verification disabled, service: gateway, classes: [weak_crypto], pentest: false}
+  - {id: G6, title: Weak crypto (HMAC-MD5), service: gateway, classes: [weak_crypto], pentest: false}
+  - {id: G7, title: Non-constant-time compare, service: gateway, classes: [weak_crypto], pentest: false}
+  - {id: G8, title: Admin config exposes keys, service: gateway, classes: [exposed_endpoint, secret_exposure], paths: [/admin/config]}
+  - {id: M1, title: nginx alias path traversal, service: edge, classes: [path_traversal], paths: [/static]}
+  - {id: M2, title: nginx status page exposed, service: edge, classes: [exposed_endpoint], paths: [/nginx_status]}
+  - {id: M3, title: Server version disclosure, service: edge, classes: [version_disclosure]}
+  - {id: M4, title: Directory listing, service: edge, classes: [directory_listing]}
+  - {id: M5, title: Unauthenticated Redis, service: redis, classes: [unauthenticated_service]}
+negatives:
+  # Any finding on these is a false positive.
+  - {id: N1, title: Allow-listed sort column in catalog search, service: shopfront, classes: [sql_injection], paths: [/catalog/search], params: [sort]}
+  - {id: N2, title: Echo API (false-positive trap; reflects input by design, sanitised), service: echo, classes: [any]}

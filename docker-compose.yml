@@ -7,8 +7,8 @@
 #
 # Profiles: lab-a, lab-b, lab-c, zoo-smoke, zoo-all. Images come from
 # appsec4u/vuln-lab (docker compose pull) or are built from this folder
-# (build.sh). The published ports are the local lab's, so the bench ground truth
-# (tools/lab/bench/ground_truth) applies unchanged; each can be moved in .env.
+# (build.sh). The ground truth (ground_truth/*.yaml) names these ports; each can
+# be moved in .env.
 
 name: vuln-lab
 
@@ -98,7 +98,7 @@ services:
     networks: [lab-c]
 
   # False-positive trap (no planted flaw): reflects input safely; any finding on
-  # it is a false positive (tools/lab/bench/ground_truth/lab-c.yaml, N2).
+  # it is a false positive (ground_truth/lab-c.yaml, N2).
   echo:
     <<: *restart
     profiles: [lab-c]
@@ -132,17 +132,15 @@ services:
       - gateway
     networks: [lab-c]
 
-  # -- The zoo (tools/zoo/README.md) ---------------------------------------------
-  # Its ground truth and target list are written to ./zoo-out for tools/zoo/smoke.py.
+  # -- The zoo ------------------------------------------------------------------
+  # Its ground truth and target list are written to ./zoo-out.
   # The container listens on the published ports, so the target list is right:
   # ZOO_SAFE_PORT must be ZOO_PORT + 50.
   zoo-smoke:
     <<: *restart
     profiles: [zoo-smoke]
     image: appsec4u/vuln-lab:zoo-${VULN_LAB_TAG:-latest}
-    build:
-      context: ../../services/server
-      dockerfile: ../../images/vuln_lab/zoo/Dockerfile
+    build: ./zoo
     environment:
       - ZOO_PROFILE=smoke
       - ZOO_PORT=${ZOO_PORT:-9100}
@@ -158,9 +156,7 @@ services:
     <<: *restart
     profiles: [zoo-all]
     image: appsec4u/vuln-lab:zoo-${VULN_LAB_TAG:-latest}
-    build:
-      context: ../../services/server
-      dockerfile: ../../images/vuln_lab/zoo/Dockerfile
+    build: ./zoo
     environment:
       - ZOO_PROFILE=all
       - ZOO_PORT=9100
