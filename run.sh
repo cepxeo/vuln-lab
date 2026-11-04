@@ -70,12 +70,22 @@ case "$action" in
   status)
     # shellcheck disable=SC2046
     docker compose $(compose_profiles "${ALL_PROFILES[@]}") ps --format 'table {{.Service}}\t{{.Status}}\t{{.Ports}}'
+    # The labs whose services run (compose ps lists every container of the
+    # project, whatever the profile, so map the services back to their lab).
     running=()
-    for profile in lab-a lab-b lab-c zoo-smoke zoo-all; do
-      # shellcheck disable=SC2046
-      if [ -n "$(docker compose $(compose_profiles "$profile") ps -q 2>/dev/null)" ]; then running+=("$profile"); fi
+    # shellcheck disable=SC2046
+    for service in $(docker compose $(compose_profiles "${ALL_PROFILES[@]}") ps --services --status running 2>/dev/null); do
+      case "$service" in
+        claimdesk|geoserver) profile=lab-a ;;
+        larder|metabase) profile=lab-b ;;
+        edge|shopfront|taskhub|gateway|echo|cache) profile=lab-c ;;
+        zoo-smoke|zoo-all) profile="$service" ;;
+        *) continue ;;
+      esac
+      case " ${running[*]} " in *" $profile "*) ;; *) running+=("$profile") ;; esac
     done
-    [ ${#running[@]} -gt 0 ] && ./probe.sh "${running[@]}"
+    if [ ${#running[@]} -eq 0 ]; then echo "Nothing is running. Start with: ./run.sh"; exit 0; fi
+    ./probe.sh "${running[@]}"
     exit 0
     ;;
 esac
