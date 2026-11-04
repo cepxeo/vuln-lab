@@ -3,7 +3,8 @@
 Intentionally vulnerable targets for benchmarking web and infrastructure
 scanners (AI pentest, DAST, network): three lab stacks and a "zoo" of small
 vulnerable apps with safe twins. Everything runs from one compose file, with
-images published as `appsec4u/vuln-lab` on Docker Hub. The ground truth of
+images published as `appsec4u/vuln-lab` on Docker Hub (public: the images hold
+only the lab applications and unchanged public middleware). The ground truth of
 every planted flaw is in [`ground_truth/`](ground_truth), so a scan can be
 scored.
 
@@ -49,7 +50,7 @@ docker compose --profile lab-a --profile lab-b --profile lab-c up -d
 ./probe.sh lab-a lab-b lab-c                # every service answers, the middleware with its vulnerable version
 ```
 
-If the Docker Hub repository is private, run `docker login` first. Any mix of
+The images are public, so no `docker login` is needed. Any mix of
 profiles works. Stop with `docker compose --profile <...> down`. GeoServer and
 Metabase take a minute or two to start.
 
