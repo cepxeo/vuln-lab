@@ -8,7 +8,13 @@ variable, an allow-list with a logic hole). None is a grep-able one-liner.
 
 Scoring: a scanner "hits" a row if it reports a finding of the listed class at
 the listed location. Count hits (recall), and count reports **not** in this list
-or landing on a negative control (false positives).
+or landing on a negative control (false positives). The machine-readable copy is
+[`../ground_truth/lab-c.yaml`](../ground_truth/lab-c.yaml).
+
+Where it runs (compose profile `lab-c`): edge (nginx) on 8300, shopfront on 8301,
+taskhub on 8302, gateway on 8303, Redis on 8306, and the echo API on 8307 (a
+false-positive trap with no planted flaw). The edge proxies `/shop/`, `/tasks/`
+and `/gw/` to the three apps. Paths in the tables are relative to `apps/<app>/`.
 
 ## shopfront — Python / Flask  (SAST, DAST, pentest)
 
@@ -57,11 +63,11 @@ fixed set.
 
 | # | Class (CWE) | Where | Why it is hidden |
 |---|---|---|---|
-| M1 | nginx alias path traversal (22) | `middleware/nginx/default.conf` `/static` | `alias` + trailing-slash mismatch → `/static../etc/passwd` |
+| M1 | nginx alias path traversal (22) | `edge/default.conf` `/static` | `alias` + trailing-slash mismatch: `/static../` maps to the alias' parent (`/static../html/index.html` answers 200); one level up only, so not `/etc/passwd` |
 | M2 | Status page exposed (200) | `/nginx_status` | `stub_status` reachable by anyone |
 | M3 | Version disclosure (200) | `server_tokens on` | banner leaks nginx version |
-| M4 | Directory listing (548) | `autoindex on` | lists the asset root |
-| M5 | Unauthenticated Redis (306) | compose `cache` (6379) | no password; internal pivot target for the SSRF sinks (S3/T4/G1) |
+| M4 | Directory listing (548) | `autoindex on` on `/static` | turned on for the asset root; `/static/` itself serves its `index.html`, so a listing shows only for a folder without one |
+| M5 | Unauthenticated Redis (306) | compose service `cache` (6379, published on 8306) | no password; internal pivot target for the SSRF sinks (S3/T4/G1) |
 
 ## Exploit chains (for AI pentest)
 

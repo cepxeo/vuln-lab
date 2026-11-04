@@ -4,7 +4,7 @@ Two fresh authorized targets, each an application + one middleware container wit
 a recent, known-exploited (CISA KEV) CVE. Synthetic data throughout.
 
 ## Host A — ClaimDesk (Java / Spring Boot 2.7.18) + GeoServer
-Base URL `http://<hostA>:8085`. Middleware GeoServer 2.23.1 on `:8086`.
+Compose profile `lab-a`: ClaimDesk on `http://<host>:8101`, GeoServer 2.23.1 on `:8102`.
 
 Seed accounts (weak web-form passwords, unsalted MD5, no password policy):
 - `admin` / `admin123` (admin)
@@ -25,10 +25,10 @@ Seed accounts (weak web-form passwords, unsalted MD5, no password policy):
 | A9 | H2 console exposed | `/h2-console` | `web-allow-others=true` |
 | A10 | Verbose errors / stacktraces | any 500 | `include-stacktrace=always` |
 | A11 | Secrets in config/env | `CLAIMDESK_SMTP_PASSWORD`, `broker-feed.url` with inline creds | visible via actuator/env |
-| A-CVE | **CVE-2024-36401** (GeoServer RCE, KEV) | `:8086` `/geoserver/ows` `valueReference=exec(...)` | unauth OGNL/JXPath eval; version on `/geoserver/web`; also filed as the GeoTools CVE-2024-36404 (nuclei uses that id) |
+| A-CVE | **CVE-2024-36401** (GeoServer RCE, KEV) | `:8102` `/geoserver/ows` `valueReference=exec(...)` | unauth OGNL/JXPath eval; version on `/geoserver/web`; also filed as the GeoTools CVE-2024-36404 (nuclei uses that id) |
 
 ## Host B — LarderList (React/Vite + Node/Express) + Metabase
-Base URL `http://<hostB>:5020`. Middleware Metabase v0.46.6 on `:3001`.
+Compose profile `lab-b`: LarderList on `http://<host>:8201`, Metabase v0.46.6 on `:8202`.
 
 Seed accounts (weak web-form passwords, plaintext storage, no policy):
 - `admin@larder.test` / `admin123` (admin)
@@ -46,13 +46,15 @@ Seed accounts (weak web-form passwords, plaintext storage, no policy):
 | B8 | Prototype pollution | `POST /api/prefs` | recursive merge honours `__proto__` |
 | B9 | Path traversal / LFI | `GET /api/export?file=../server.js` | `path.join` no checks |
 | B10 | Verbose errors | 500 responses | echo `sql` / exception message |
-| B-CVE | **CVE-2023-38646** (Metabase pre-auth RCE, KEV) | `:3001` `/api/setup/validate` via leaked setup-token | version on `/api/session/properties` |
+| B-CVE | **CVE-2023-38646** (Metabase pre-auth RCE, KEV) | `:8202` `/api/setup/validate` via leaked setup-token | version on `/api/session/properties` |
 
 ## Deployment
-- Host A stack: `r4/hostA/docker-compose.yml` (claimdesk + geoserver).
-- Host B stack: `r4/hostB/docker-compose.yml` (larder + metabase).
-- Placement decided at deploy time across the two Azure VMs (20.61.213.253,
-  20.224.97.16); old benchmark stacks are torn down first.
+- Lab A: `docker compose --profile lab-a up -d` (claimdesk + geoserver).
+- Lab B: `docker compose --profile lab-b up -d` (larder + metabase).
+- The machine-readable copies are `ground_truth/lab-a.yaml` and
+  `ground_truth/lab-b.yaml`. The two labs can share one host; each has its own
+  ports and network. To score infrastructure scans per host, run each on its
+  own host.
 
 ## What this round exercises in the engine
 - G1/G2: fingerprint GeoServer & Metabase (no banner version) → correlate KEV CVEs.
