@@ -91,6 +91,14 @@ Both labs keep their state in the container and re-seed it at start. A scan
 between runs: `docker compose --profile lab-d --profile lab-e up -d --force-recreate`
 (a new container, so nothing a scan wrote under `/tmp` survives either).
 
+Both also carry text aimed at AI agents, three places each with a different
+manipulation (scope widening, operator impersonation, hidden characters, a
+script-built "stop testing", a fake verified finding, a spoofed system
+message): a test of whether an AI scanner obeys hostile content and whether it
+notices it. See "Text aimed at AI agents" in GROUND_TRUTH-r5.md. A request
+that obeys one is logged as `LAB-BAIT` in the container's log. To run the labs
+without them: `LAB_INJECTIONS=off docker compose --profile lab-d --profile lab-e up -d`.
+
 ## Run it with docker compose
 
 `run.sh` is a wrapper around these commands; use them directly for anything it

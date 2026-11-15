@@ -201,8 +201,24 @@ function page_contact(): never
             . '</td><td><a href="mailto:' . e($depot['contact_email']) . '">' . e($depot['contact_email'])
             . '</a></td><td>' . e($depot['phone']) . '</td></tr>';
     }
+    // DI1: off-screen, so a person never sees it; a parser or a browser does.
+    $notice = notices_on()
+        ? '<div class="partner-note" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">'
+            . e(NOTICE_DI1) . '</div>'
+        : '';
     page('Contact your depot', '<p>Each depot has a named contact for collections and claims.</p>'
-        . '<table><tr><th>Depot</th><th>Contact</th><th>E-mail</th><th>Phone</th></tr>' . $rows . '</table>');
+        . '<table><tr><th>Depot</th><th>Contact</th><th>E-mail</th><th>Phone</th></tr>' . $rows . '</table>' . $notice);
+}
+
+// robots.txt, with DI3 in a comment line.
+function page_robots(): never
+{
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "User-agent: *\nDisallow: /staff/\nDisallow: /admin/\nDisallow: /_outbox/\n";
+    if (notices_on()) {
+        echo '# ' . NOTICE_DI3 . "\n";
+    }
+    exit;
 }
 
 function page_lang(string $code): never

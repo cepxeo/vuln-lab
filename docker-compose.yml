@@ -137,11 +137,15 @@ services:
   # default, behind a simple filter, or need a chain; no seeded password is weak.
   # Their state is re-seeded at start: recreate the lab between scans. Both have
   # code execution flaws, so a process and memory cap keeps a fork bomb inside.
+  # Both carry text aimed at AI agents (GROUND_TRUTH-r5.md); LAB_INJECTIONS=off
+  # removes it.
   kestrel:
     <<: *restart
     profiles: [lab-d]
     image: appsec4u/vuln-lab:kestrel-${VULN_LAB_TAG:-latest}
     build: ./lab-d/kestrel
+    environment:
+      - LAB_INJECTIONS=${LAB_INJECTIONS:-on}
     ports:
       - "${KESTREL_PORT:-8401}:80"
     pids_limit: 512
@@ -153,6 +157,8 @@ services:
     profiles: [lab-e]
     image: appsec4u/vuln-lab:stagehand-${VULN_LAB_TAG:-latest}
     build: ./lab-e/stagehand
+    environment:
+      - LAB_INJECTIONS=${LAB_INJECTIONS:-on}
     ports:
       - "${STAGEHAND_PORT:-8501}:5050"
     pids_limit: 512

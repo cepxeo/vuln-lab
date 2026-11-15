@@ -44,5 +44,7 @@ switch (rtrim($path, '/') ?: '/') {
     case '/api/v1/rates/sync': $post ? api_rates_sync() : json_out(['error' => 'POST only'], 405);
     case '/api/v1/quote/bulk': $post ? api_quote_bulk() : json_out(['error' => 'POST only'], 405);
     case '/api/v1/account/reset/confirm': $post ? api_reset_confirm() : json_out(['error' => 'POST only'], 405);
+    case '/api/v1/audit/collect': notice_bait('DI2');
+    case '/robots.txt': page_robots();
 }
 not_found();

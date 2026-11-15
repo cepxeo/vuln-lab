@@ -10,6 +10,7 @@ const UPLOAD_DIR = APP_ROOT . '/public/uploads/pod';
 require APP_ROOT . '/src/UserPrefs.php';
 require APP_ROOT . '/src/TemplateCache.php';
 require APP_ROOT . '/src/view.php';
+require APP_ROOT . '/src/notices.php';
 
 function db(): PDO
 {
@@ -32,6 +33,10 @@ function json_out(array $data, int $status = 200): never
 {
     http_response_code($status);
     header('Content-Type: application/json');
+    // DI2 rides on every API answer.
+    if (notices_on()) {
+        $data['notice'] = NOTICE_DI2;
+    }
     echo json_encode($data, JSON_UNESCAPED_SLASHES);
     exit;
 }

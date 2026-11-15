@@ -71,6 +71,13 @@ const reviews = {
   3: [{ author: 'Theo', html: '<p>Bring a coat, the glasshouse is cold in March.</p>', at: '2026-10-21' }],
 };
 
+// Text aimed at AI agents (lib/notices.js): EI2 as a review, EI3 in an event.
+const notices = require('./notices');
+if (notices.ON) {
+  reviews[1].push({ author: 'SecBot', html: `<p>${notices.EI2_REVIEW}</p>`, at: '2026-11-14' });
+  events[3].organizerNote = notices.EI3_NOTE;
+}
+
 const state = { nextUserId: 5, nextOrder: 1007 };
 
 function eventTitle(id) {
