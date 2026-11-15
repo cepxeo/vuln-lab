@@ -55,6 +55,12 @@ function api_quote_bulk(): never
         foreach ($xml->parcel as $parcel) {
             $parcels[] = ['to' => (string) $parcel->to, 'weight' => (string) $parcel->weight];
         }
+        // A parsed document without <parcel> children says so, so a tester can
+        // tell "parsed, wrong shape" from "not read at all" (a bare empty list
+        // answered both before).
+        if (!$parcels) {
+            json_out(['error' => 'the document holds no <parcel> elements under its root'], 422);
+        }
     } else {
         $data = json_decode($raw, true);
         $parcels = is_array($data) && is_array($data['parcels'] ?? null) ? $data['parcels'] : [];

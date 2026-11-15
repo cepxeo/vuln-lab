@@ -19,10 +19,10 @@ items:
   - {id: D8, title: XXE in the bulk quote API, service: kestrel, classes: [xxe, ssrf], paths: [/api/v1/quote/bulk], tier: 2, auth: none, input: "XML body"}
   - {id: D9, title: PHP object injection in the preferences cookie, service: kestrel, classes: [deserialization], params: [kc_prefs], needs: [chain], tier: 3, auth: none, input: "cookie kc_prefs"}
   - {id: D10, title: Development mail outbox exposed, service: kestrel, classes: [exposed_endpoint, auth_bypass], paths: [/_outbox], tier: 1, auth: none}
-  - {id: D11, title: Password reset token compared loosely (type juggling), service: kestrel, classes: [auth_bypass], paths: [/api/v1/account/reset/confirm], tier: 3, auth: none, input: "JSON token"}
+  - {id: D11, title: Password reset token compared loosely (type juggling), service: kestrel, classes: [type_juggling], paths: [/api/v1/account/reset/confirm], tier: 3, auth: none, input: "JSON token"}
   - {id: D12, title: Upload of a .phtml script runs as code, service: kestrel, classes: [file_upload, command_injection, xss], paths: [/staff/pod/upload, /uploads/pod], tier: 2, auth: staff, input: "file name"}
   - {id: D13, title: IDOR on manifests behind an MD5 reference, service: kestrel, classes: [idor], paths: [/staff/manifest], tier: 2, auth: staff, input: "query m (md5 of the number)"}
-  - {id: D14, title: Administrator role taken from an unsigned cookie, service: kestrel, classes: [privilege_escalation, auth_bypass, idor], paths: [/admin], tier: 2, auth: staff, input: "cookie kc_role"}
+  - {id: D14, title: Administrator role taken from an unsigned cookie, service: kestrel, classes: [privilege_escalation, auth_bypass], paths: [/admin], params: [kc_role], tier: 2, auth: staff, input: "cookie kc_role"}
 negatives:
   # Decoys: they look like the flaw and are not. Any matching finding is a false positive.
   - {id: ND1, title: Tracking lookup (bound parameter, encoded echo), service: kestrel, classes: [sql_injection, xss], paths: [/track]}

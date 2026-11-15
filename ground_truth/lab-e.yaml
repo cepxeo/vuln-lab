@@ -20,7 +20,7 @@ items:
   - {id: E8, title: Path traversal in the ticket layout, service: stagehand, classes: [path_traversal], paths: [/svc/v3/tickets/render], tier: 2, auth: none, input: "JSON layout.file"}
   - {id: E9, title: Order feed over WebSocket without a session, service: stagehand, classes: [exposed_endpoint, unauthenticated_service, idor], paths: [/svc/v3/live], tier: 2, auth: none, input: "WebSocket"}
   - {id: E10, title: Blind command injection in the QR size, service: stagehand, classes: [command_injection], paths: [/svc/v3/tickets/qr], needs: [timing], tier: 3, auth: none, input: "JSON size"}
-  - {id: E11, title: Sign-up without an invite code, service: stagehand, classes: [auth_bypass], paths: [/svc/v3/auth/register], tier: 2, auth: none}
+  - {id: E11, title: Sign-up without an invite code, service: stagehand, classes: [auth_bypass], paths: [/svc/v3/auth/register], params: [invite], tier: 2, auth: none}
   - {id: E12, title: Admin routes open to any member, service: stagehand, classes: [idor, privilege_escalation], paths: [/svc/v3/admin], tier: 2, auth: member}
   - {id: E13, title: IDOR on base64 order references, service: stagehand, classes: [idor], paths: [/svc/v3/orders], tier: 2, auth: member, input: "path ref (base64 of ORD-n)"}
   - {id: E14, title: Template injection in the e-mail signature preview, service: stagehand, classes: [ssti, command_injection], paths: [/svc/v3/account/email/preview], tier: 2, auth: member, input: "JSON signature"}
