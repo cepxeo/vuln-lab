@@ -1,0 +1,11 @@
+<?php
+return [
+    'nav_track' => 'Sendung verfolgen',
+    'nav_depots' => 'Depots',
+    'nav_quote' => 'Preis berechnen',
+    'nav_labels' => 'Etiketten',
+    'nav_reviews' => 'Bewertungen',
+    'nav_contact' => 'Kontakt',
+    'nav_signin' => 'Mitarbeiter-Login',
+    'tagline' => 'Pakete, die ankommen, wenn wir es sagen.',
+];

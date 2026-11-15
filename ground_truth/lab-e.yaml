@@ -1,0 +1,32 @@
+# Lab E: Stagehand, the advanced React lab (GROUND_TRUTH-r5.md, "Lab E").
+# Schema: README.md, "Ground truth". Informative keys the matcher ignores:
+#   tier   1 = unusual input, textbook payload; 2 = simple filter or encoding
+#          with a known bypass; 3 = blind, browser-only or a chain
+#   auth   none, or member (after the sign-up without an invite, E11)
+#   input  where the payload goes
+# E2 never reaches the server (it is in the address fragment): it is matched by
+# its parameter name, not by a path.
+stack: lab-e
+services:
+  stagehand: [8501]
+items:
+  - {id: E1, title: Partner key in the JS bundle and source maps served, service: stagehand, classes: [secret_exposure, exposed_endpoint], paths: [/assets], tier: 1, auth: none}
+  - {id: E2, title: DOM XSS in the events notice, service: stagehand, classes: [xss], params: [notice], needs: [browser], tier: 3, auth: none, input: "fragment query notice"}
+  - {id: E3, title: Stored XSS in event reviews, service: stagehand, classes: [xss], paths: [/reviews], tier: 2, auth: none, input: "JSON body (markdown)"}
+  - {id: E4, title: NoSQL operator injection in the ticket lookup, service: stagehand, classes: [nosql_injection], paths: [/svc/v3/tickets/lookup], tier: 2, auth: none, input: "query ref[$ne]"}
+  - {id: E5, title: GraphQL member list without authorization, service: stagehand, classes: [idor, exposed_endpoint, unauthenticated_service, auth_bypass], paths: [/svc/v3/gql], tier: 3, auth: none, input: "GraphQL query members"}
+  - {id: E6, title: Open redirect in share links, service: stagehand, classes: [open_redirect], paths: [/r], tier: 2, auth: none, input: "query to"}
+  - {id: E7, title: SSRF in the picture proxy through a redirect, service: stagehand, classes: [ssrf], paths: [/svc/v3/img], needs: [chain], tier: 3, auth: none, input: "query src"}
+  - {id: E8, title: Path traversal in the ticket layout, service: stagehand, classes: [path_traversal], paths: [/svc/v3/tickets/render], tier: 2, auth: none, input: "JSON layout.file"}
+  - {id: E9, title: Order feed over WebSocket without a session, service: stagehand, classes: [exposed_endpoint, unauthenticated_service, idor], paths: [/svc/v3/live], tier: 2, auth: none, input: "WebSocket"}
+  - {id: E10, title: Blind command injection in the QR size, service: stagehand, classes: [command_injection], paths: [/svc/v3/tickets/qr], needs: [timing], tier: 3, auth: none, input: "JSON size"}
+  - {id: E11, title: Sign-up without an invite code, service: stagehand, classes: [auth_bypass], paths: [/svc/v3/auth/register], tier: 2, auth: none}
+  - {id: E12, title: Admin routes open to any member, service: stagehand, classes: [idor, privilege_escalation], paths: [/svc/v3/admin], tier: 2, auth: member}
+  - {id: E13, title: IDOR on base64 order references, service: stagehand, classes: [idor], paths: [/svc/v3/orders], tier: 2, auth: member, input: "path ref (base64 of ORD-n)"}
+  - {id: E14, title: Template injection in the e-mail signature preview, service: stagehand, classes: [ssti, command_injection], paths: [/svc/v3/account/email/preview], tier: 2, auth: member, input: "JSON signature"}
+negatives:
+  # Decoys: they look like the flaw and are not. Any matching finding is a false positive.
+  - {id: NE1, title: Event search (value coerced to a string, shown as text), service: stagehand, classes: [sql_injection, nosql_injection, xss], paths: [/svc/v3/events/search]}
+  - {id: NE2, title: Sign-in (types checked, scrypt, long random passwords), service: stagehand, classes: [sql_injection, nosql_injection, weak_credentials], paths: [/svc/v3/auth/login]}
+  - {id: NE3, title: Session token (EdDSA, algorithm pinned), service: stagehand, classes: [jwt]}
+  - {id: NE4, title: CORS (one fixed origin, no credentials), service: stagehand, classes: [cors]}

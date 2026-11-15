@@ -1,7 +1,7 @@
 # vuln-lab
 
 Intentionally vulnerable targets for benchmarking web and infrastructure
-scanners (AI pentest, DAST, network): three lab stacks and a "zoo" of small
+scanners (AI pentest, DAST, network): five lab stacks and a "zoo" of small
 vulnerable apps with safe twins. Everything runs from one compose file, with
 images published as `appsec4u/vuln-lab` on Docker Hub (public: the images hold
 only the lab applications and unchanged public middleware). The ground truth of
@@ -19,13 +19,13 @@ Windows, use a WSL distribution or a Linux VM with its own Docker Engine (see
 
 ```bash
 git clone https://github.com/cepxeo/vuln-lab && cd vuln-lab
-./run.sh            # pulls and starts Lab A, B and C, waits until every service answers
+./run.sh            # pulls and starts Lab A to E, waits until every service answers
 ```
 
 When it is ready, `run.sh` prints the scan targets. Other commands:
 
 ```bash
-./run.sh lab-c      # only some labs: lab-a lab-b lab-c, zoo (2 targets), zoo-all (40 targets)
+./run.sh lab-c      # only some labs: lab-a to lab-e, zoo (2 targets), zoo-all (40 targets)
 ./run.sh zoo        # the zoo; its targets and ground truth go to zoo-out/
 ./run.sh status     # what runs and whether it answers
 ./run.sh down       # stop and remove everything
@@ -50,11 +50,14 @@ any of them, copy `.env.example` to `.env` and set it there (for example,
 | | gateway | 8303 | Go asset gateway |
 | | cache | 8306 | Redis 7 without a password (pivot target) |
 | | echo | 8307 | false-positive trap: no planted flaw |
+| `lab-d` | kestrel | 8401 | Kestrel Courier, PHP 8.3 on Apache: the advanced PHP lab (below) |
+| `lab-e` | stagehand | 8501 | Stagehand, React + Express: the advanced React lab (below) |
 | `zoo-smoke` | zoo | 9100, 9150 | 6 zoo apps on one origin, their safe twins on the other |
 | `zoo-all` | zoo | 9100-9119, 9150-9169 | all 20 zoo apps on their own ports, twins 50 above |
 
-What each lab plants: [GROUND_TRUTH-r4.md](GROUND_TRUTH-r4.md) (Lab A and B) and
-[lab-c/BENCHMARK.md](lab-c/BENCHMARK.md). The machine-readable copies are in
+What each lab plants: [GROUND_TRUTH-r4.md](GROUND_TRUTH-r4.md) (Lab A and B),
+[lab-c/BENCHMARK.md](lab-c/BENCHMARK.md) and [GROUND_TRUTH-r5.md](GROUND_TRUTH-r5.md)
+(Lab D and E). The machine-readable copies are in
 [`ground_truth/`](ground_truth) (see [Ground truth](#ground-truth)). They name
 the default ports, so keep those unless you edit the copies.
 
@@ -62,6 +65,30 @@ The middleware (GeoServer, Metabase, Redis, nginx) is pinned to an exact
 upstream build by digest in its Dockerfile and copied to `appsec4u/vuln-lab`
 unchanged. GeoServer and Metabase exist for amd64 only; on an ARM host they run
 under emulation, slowly. Everything else is built for amd64 and arm64.
+
+### The advanced labs (D and E)
+
+Labs A and B plant textbook flaws on obvious parameters. Labs D and E are for
+scanners that already find those. Each has 14 flaws and 4 decoys:
+
+- the input is somewhere a crawler does not fuzz by default: a cookie, a path
+  segment, a nested JSON field, a base64-wrapped value, a bracket-syntax query,
+  a WebSocket, a GraphQL field;
+- or a simple filter stops the textbook payload and a known bypass passes;
+- or the proof is blind, needs a browser, or needs two steps.
+
+Eleven flaws per lab need no account, three need one. No password is weak: the
+way in is a broken sign-in process (password recovery in Lab D, an invite check
+that only the page enforces in Lab E). The decoys look like the flaw and are
+not; a finding on one is a false positive. Every flaw has a reference exploit:
+
+```bash
+./verify.sh lab-d lab-e     # every flaw gives its proof, every decoy holds
+```
+
+Both labs keep their state in the container and re-seed it at start. A scan
+(and `verify.sh`) can reset a password or upload a file, so restart the lab
+between runs: `docker compose --profile lab-d --profile lab-e restart`.
 
 ## Run it with docker compose
 
@@ -117,14 +144,17 @@ items:               # planted flaws
     paths: [/login, /claims/search] # optional: a finding names one of them
     cve: CVE-2024-36401             # with class cve: matched by id
     cve_aliases: [CVE-2024-36404]   # optional: other ids of the same flaw
-    needs: [oob]                    # informative: chain, oob (out-of-band callback), poc
+    params: [kc_depot]              # optional: a finding names one of them (a cookie, a parameter)
+    needs: [oob]                    # informative: chain, oob (out-of-band callback), poc, browser, timing
+    tier: 2                         # informative, Lab D and E: 1 unusual input, 2 filter, 3 blind or chain
     pentest: false                  # source-only flaw: not expected from a dynamic scan
 negatives:           # controls: any matching finding is a false positive
   - {id: N1, service: shopfront, classes: [sql_injection], paths: [/catalog/search], params: [sort]}
 ```
 
 A finding hits an item when it names one of the item's classes, lands on one of
-the service's ports and mentions one of its paths (when the item lists paths).
+the service's ports and mentions one of its paths (when the item lists paths)
+and one of its params (when it lists params).
 A finding that matches a negative is a false positive.
 
 ## Building and publishing
@@ -142,8 +172,8 @@ To publish (as appsec4u): commit and push first, then `docker login` and
 `origin/main`. It builds our images for amd64 and arm64 and pushes them. It
 copies the middleware digests registry to registry, byte for byte. Each image
 gets two tags: `<name>-<commit>` and `<name>-latest`. Images:
-`claimdesk larder shopfront taskhub gateway echo edge zoo geoserver metabase
-redis`.
+`claimdesk larder shopfront taskhub gateway echo edge kestrel stagehand zoo
+geoserver metabase redis`.
 
 The zoo's apps are developed in ScanSuite's test suite. `zoo/app` is a copy of
 the modules the zoo server needs, kept current with `zoo/sync.sh` in the
@@ -152,13 +182,15 @@ scansuite-teams checkout.
 ## Layout
 
 ```
-docker-compose.yml       every service; profiles lab-a, lab-b, lab-c, zoo-smoke, zoo-all
+docker-compose.yml       every service; profiles lab-a to lab-e, zoo-smoke, zoo-all
 docker-compose.host.yml  the zoo on the host network (Docker Desktop)
 .env.example             tag, zoo address, port overrides
 run.sh                   start, stop and check the labs with the defaults (Quick start)
 build.sh, probe.sh       build and publish; check that a profile answers
+verify.sh                run the reference exploits of Lab D and E
 ground_truth/            the planted flaws of each lab, machine-readable
 GROUND_TRUTH-r4.md       Lab A and B, described
+GROUND_TRUTH-r5.md       Lab D and E, described
 lab-a/claimdesk          ClaimDesk source and Dockerfile
 lab-a/geoserver          GeoServer 2.23.1, pinned
 lab-b/larder             LarderList source and Dockerfile
@@ -167,5 +199,7 @@ lab-c/apps/*             shopfront, taskhub, gateway, echo
 lab-c/edge               nginx 1.25 with the lab's config built in
 lab-c/redis              Redis 7, pinned
 lab-c/BENCHMARK.md       Lab C, described
+lab-d/kestrel            Kestrel Courier source and Dockerfile; lab-d/verify.py
+lab-e/stagehand          Stagehand source and Dockerfile; lab-e/verify.py
 zoo/                     the zoo's Dockerfile and its copy of the zoo apps (app/)
 ```

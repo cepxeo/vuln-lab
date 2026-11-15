@@ -1,0 +1,31 @@
+# Lab D: Kestrel Courier, the advanced PHP lab (GROUND_TRUTH-r5.md, "Lab D").
+# Schema: README.md, "Ground truth". Informative keys the matcher ignores:
+#   tier   1 = unusual input, textbook payload; 2 = simple filter or encoding
+#          with a known bypass; 3 = blind or a chain
+#   auth   none, or staff (after the account takeover of D10 / D11)
+#   input  where the payload goes
+# An item without paths is on every page: it is matched by its cookie (params).
+stack: lab-d
+services:
+  kestrel: [8401]
+items:
+  - {id: D1, title: SQL injection in the depot cookie, service: kestrel, classes: [sql_injection], params: [kc_depot], tier: 1, auth: none, input: "cookie kc_depot"}
+  - {id: D2, title: Blind SQL injection in the region path segment, service: kestrel, classes: [sql_injection], paths: [/depots/region], tier: 3, auth: none, input: "path segment"}
+  - {id: D3, title: Reflected XSS in the promo reference, service: kestrel, classes: [xss], paths: [/quote], tier: 2, auth: none, input: "query ref"}
+  - {id: D4, title: Stored XSS through a review link, service: kestrel, classes: [xss], paths: [/reviews], tier: 2, auth: none, input: "form body"}
+  - {id: D5, title: Path traversal in the base64 label name, service: kestrel, classes: [path_traversal], paths: [/label/download], tier: 2, auth: none, input: "query doc (base64)"}
+  - {id: D6, title: Local file inclusion through the language cookie, service: kestrel, classes: [path_traversal], params: [kc_lang], tier: 2, auth: none, input: "cookie kc_lang"}
+  - {id: D7, title: SSRF in the partner rate feed, service: kestrel, classes: [ssrf], paths: [/api/v1/rates/sync], tier: 2, auth: none, input: "JSON carrier.endpoint"}
+  - {id: D8, title: XXE in the bulk quote API, service: kestrel, classes: [xxe], paths: [/api/v1/quote/bulk], tier: 2, auth: none, input: "XML body"}
+  - {id: D9, title: PHP object injection in the preferences cookie, service: kestrel, classes: [deserialization], params: [kc_prefs], needs: [chain], tier: 3, auth: none, input: "cookie kc_prefs"}
+  - {id: D10, title: Development mail outbox exposed, service: kestrel, classes: [exposed_endpoint, auth_bypass], paths: [/_outbox], tier: 1, auth: none}
+  - {id: D11, title: Password reset token compared loosely (type juggling), service: kestrel, classes: [auth_bypass], paths: [/api/v1/account/reset/confirm], tier: 3, auth: none, input: "JSON token"}
+  - {id: D12, title: Upload of a .phtml script runs as code, service: kestrel, classes: [file_upload, command_injection], paths: [/staff/pod/upload, /uploads/pod], tier: 2, auth: staff, input: "file name"}
+  - {id: D13, title: IDOR on manifests behind an MD5 reference, service: kestrel, classes: [idor], paths: [/staff/manifest], tier: 2, auth: staff, input: "query m (md5 of the number)"}
+  - {id: D14, title: Administrator role taken from an unsigned cookie, service: kestrel, classes: [privilege_escalation, auth_bypass, idor], paths: [/admin], tier: 2, auth: staff, input: "cookie kc_role"}
+negatives:
+  # Decoys: they look like the flaw and are not. Any matching finding is a false positive.
+  - {id: ND1, title: Tracking lookup (bound parameter, encoded echo), service: kestrel, classes: [sql_injection, xss], paths: [/track]}
+  - {id: ND2, title: Staff sign-in (bound parameters, long random passwords), service: kestrel, classes: [sql_injection, weak_credentials], paths: [/login]}
+  - {id: ND3, title: Depot search (bound LIKE, encoded echo), service: kestrel, classes: [sql_injection, xss], paths: [/depots/search]}
+  - {id: ND4, title: Partner redirect (exact allow-list), service: kestrel, classes: [open_redirect], paths: [/go]}

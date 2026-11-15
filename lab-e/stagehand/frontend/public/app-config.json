@@ -1,0 +1,6 @@
+{
+  "siteName": "Stagehand",
+  "apiBase": "/svc/v3",
+  "cdn": "http://cdn.stagehand.test",
+  "features": { "liveFeed": true, "inviteOnly": true }
+}

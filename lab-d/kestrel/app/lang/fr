@@ -1,0 +1,11 @@
+<?php
+return [
+    'nav_track' => 'Suivre un colis',
+    'nav_depots' => 'Dépôts',
+    'nav_quote' => 'Obtenir un devis',
+    'nav_labels' => 'Étiquettes',
+    'nav_reviews' => 'Avis',
+    'nav_contact' => 'Contact',
+    'nav_signin' => 'Connexion du personnel',
+    'tagline' => 'Des colis qui arrivent quand nous le disons.',
+];

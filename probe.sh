@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Check that the services of the given profiles answer (README.md):
 #
-#   ./probe.sh lab-a lab-c            probe localhost
+#   ./probe.sh lab-a lab-d            probe localhost
 #   PROBE_HOST=10.0.0.5 ./probe.sh lab-b
 #
 # Each HTTP service must answer (and the middleware with its known-vulnerable
@@ -35,7 +35,7 @@ redis_ping() {
   else echo "FAIL cache redis://$host:$1: no PONG"; failed=1; fi
 }
 
-[ $# -gt 0 ] || { echo "usage: $0 <profile>... (lab-a lab-b lab-c zoo-smoke zoo-all)" >&2; exit 2; }
+[ $# -gt 0 ] || { echo "usage: $0 <profile>... (lab-a lab-b lab-c lab-d lab-e zoo-smoke zoo-all)" >&2; exit 2; }
 for profile in "$@"; do
   case "$profile" in
     lab-a)
@@ -54,6 +54,13 @@ for profile in "$@"; do
       http gateway "${GATEWAY_PORT:-8303}" /
       http echo "${ECHO_PORT:-8307}" /
       redis_ping "${REDIS_PORT:-8306}"
+      ;;
+    lab-d)
+      http kestrel "${KESTREL_PORT:-8401}" / "Kestrel Courier"
+      ;;
+    lab-e)
+      http stagehand "${STAGEHAND_PORT:-8501}" /
+      http stagehand-config "${STAGEHAND_PORT:-8501}" /app-config.json "apiBase"
       ;;
     zoo-smoke)
       http zoo "${ZOO_PORT:-9100}" /

@@ -13,7 +13,8 @@
 #                                  and a commit that is on origin/main.
 #   --tag <tag>                    another tag than the commit (local builds only)
 #
-# Names: claimdesk larder shopfront taskhub gateway echo edge zoo (built here),
+# Names: claimdesk larder shopfront taskhub gateway echo edge kestrel stagehand
+#        zoo (built here),
 #        geoserver metabase redis (upstream, pinned in their Dockerfile).
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -22,7 +23,7 @@ REPO=appsec4u/vuln-lab
 PLATFORMS=linux/amd64,linux/arm64
 BUILDER=vuln-lab
 
-BUILT=(claimdesk larder shopfront taskhub gateway echo edge zoo)
+BUILT=(claimdesk larder shopfront taskhub gateway echo edge kestrel stagehand zoo)
 COPIED=(geoserver metabase redis)
 
 context_of() {
@@ -31,6 +32,8 @@ context_of() {
     larder) echo lab-b/larder ;;
     shopfront|taskhub|gateway|echo) echo "lab-c/apps/$1" ;;
     edge) echo lab-c/edge ;;
+    kestrel) echo lab-d/kestrel ;;
+    stagehand) echo lab-e/stagehand ;;
     zoo) echo zoo ;;
     geoserver) echo lab-a/geoserver ;;
     metabase) echo lab-b/metabase ;;

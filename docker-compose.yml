@@ -5,7 +5,7 @@
 #   docker compose --profile lab-a --profile lab-c up -d    # any mix of profiles
 #   docker compose --profile zoo-smoke up -d                # needs ZOO_ADDRESS
 #
-# Profiles: lab-a, lab-b, lab-c, zoo-smoke, zoo-all. Images come from
+# Profiles: lab-a, lab-b, lab-c, lab-d, lab-e, zoo-smoke, zoo-all. Images come from
 # appsec4u/vuln-lab (docker compose pull) or are built from this folder
 # (build.sh). The ground truth (ground_truth/*.yaml) names these ports; each can
 # be moved in .env.
@@ -132,6 +132,28 @@ services:
       - gateway
     networks: [lab-c]
 
+  # -- Lab D and Lab E: the advanced labs (GROUND_TRUTH-r5.md) --------------------
+  # One application each. The flaws sit in inputs a crawler does not fuzz by
+  # default, behind a simple filter, or need a chain; no seeded password is weak.
+  # Their state is re-seeded at start: restart the lab between scans.
+  kestrel:
+    <<: *restart
+    profiles: [lab-d]
+    image: appsec4u/vuln-lab:kestrel-${VULN_LAB_TAG:-latest}
+    build: ./lab-d/kestrel
+    ports:
+      - "${KESTREL_PORT:-8401}:80"
+    networks: [lab-d]
+
+  stagehand:
+    <<: *restart
+    profiles: [lab-e]
+    image: appsec4u/vuln-lab:stagehand-${VULN_LAB_TAG:-latest}
+    build: ./lab-e/stagehand
+    ports:
+      - "${STAGEHAND_PORT:-8501}:5050"
+    networks: [lab-e]
+
   # -- The zoo ------------------------------------------------------------------
   # Its ground truth and target list are written to ./zoo-out.
   # The container listens on the published ports, so the target list is right:
@@ -171,3 +193,5 @@ networks:
   lab-a:
   lab-b:
   lab-c:
+  lab-d:
+  lab-e:

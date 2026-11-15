@@ -1,0 +1,11 @@
+<?php
+return [
+    'nav_track' => 'Track a parcel',
+    'nav_depots' => 'Depots',
+    'nav_quote' => 'Get a quote',
+    'nav_labels' => 'Labels',
+    'nav_reviews' => 'Reviews',
+    'nav_contact' => 'Contact',
+    'nav_signin' => 'Staff sign-in',
+    'tagline' => 'Parcels that arrive when we say they will.',
+];

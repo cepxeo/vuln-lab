@@ -1,0 +1,18 @@
+{
+  "name": "stagehand-web",
+  "private": true,
+  "version": "3.4.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.30.6"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.7.0",
+    "vite": "5.4.21"
+  }
+}
