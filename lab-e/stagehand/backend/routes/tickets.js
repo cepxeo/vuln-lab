@@ -71,7 +71,7 @@ router.post('/qr', (req, res) => {
   const size = body.size === undefined ? '4' : String(body.size);
   if (!text) return res.status(400).json({ error: 'text is needed' });
   if (REFUSED.test(size) || size.length > 80) return res.status(400).json({ error: 'bad size' });
-  exec(`qrencode -t PNG -s ${size} -o - ${shellQuote(text)}`, { encoding: 'buffer', timeout: 20000, maxBuffer: 1024 * 1024 },
+  exec(`qrencode -t PNG -s ${size} -o - -- ${shellQuote(text)}`, { encoding: 'buffer', timeout: 20000, maxBuffer: 1024 * 1024 },
     (error, stdout) => {
       if (error || !stdout.length) return res.status(500).json({ error: 'could not render the code' });
       res.type('image/png').send(stdout);

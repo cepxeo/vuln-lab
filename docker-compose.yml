@@ -135,7 +135,8 @@ services:
   # -- Lab D and Lab E: the advanced labs (GROUND_TRUTH-r5.md) --------------------
   # One application each. The flaws sit in inputs a crawler does not fuzz by
   # default, behind a simple filter, or need a chain; no seeded password is weak.
-  # Their state is re-seeded at start: restart the lab between scans.
+  # Their state is re-seeded at start: recreate the lab between scans. Both have
+  # code execution flaws, so a process and memory cap keeps a fork bomb inside.
   kestrel:
     <<: *restart
     profiles: [lab-d]
@@ -143,6 +144,8 @@ services:
     build: ./lab-d/kestrel
     ports:
       - "${KESTREL_PORT:-8401}:80"
+    pids_limit: 512
+    mem_limit: 1g
     networks: [lab-d]
 
   stagehand:
@@ -152,6 +155,8 @@ services:
     build: ./lab-e/stagehand
     ports:
       - "${STAGEHAND_PORT:-8501}:5050"
+    pids_limit: 512
+    mem_limit: 1g
     networks: [lab-e]
 
   # -- The zoo ------------------------------------------------------------------

@@ -11,6 +11,6 @@ fetch('/app-config.json')
   .then((config) => {
     configure(config);
     // Page-only state: readable by script running in the page, not by a request.
-    window.__stagehand = { build: 'SH-E02-4d0f6a27', site: config.siteName || 'Stagehand' };
+    window.__stagehand = { build: ['SH', 'E02', '4d0f6a27'].join('-'), site: config.siteName || 'Stagehand' };
     createRoot(document.getElementById('root')).render(<App />);
   });

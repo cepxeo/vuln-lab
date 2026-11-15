@@ -88,7 +88,8 @@ not; a finding on one is a false positive. Every flaw has a reference exploit:
 
 Both labs keep their state in the container and re-seed it at start. A scan
 (and `verify.sh`) can reset a password or upload a file, so restart the lab
-between runs: `docker compose --profile lab-d --profile lab-e restart`.
+between runs: `docker compose --profile lab-d --profile lab-e up -d --force-recreate`
+(a new container, so nothing a scan wrote under `/tmp` survives either).
 
 ## Run it with docker compose
 

@@ -14,13 +14,13 @@ items:
   - {id: D3, title: Reflected XSS in the promo reference, service: kestrel, classes: [xss], paths: [/quote], tier: 2, auth: none, input: "query ref"}
   - {id: D4, title: Stored XSS through a review link, service: kestrel, classes: [xss], paths: [/reviews], tier: 2, auth: none, input: "form body"}
   - {id: D5, title: Path traversal in the base64 label name, service: kestrel, classes: [path_traversal], paths: [/label/download], tier: 2, auth: none, input: "query doc (base64)"}
-  - {id: D6, title: Local file inclusion through the language cookie, service: kestrel, classes: [path_traversal], params: [kc_lang], tier: 2, auth: none, input: "cookie kc_lang"}
+  - {id: D6, title: Local file inclusion through the language cookie, service: kestrel, classes: [path_traversal, command_injection], params: [kc_lang], tier: 2, auth: none, input: "cookie kc_lang"}
   - {id: D7, title: SSRF in the partner rate feed, service: kestrel, classes: [ssrf], paths: [/api/v1/rates/sync], tier: 2, auth: none, input: "JSON carrier.endpoint"}
-  - {id: D8, title: XXE in the bulk quote API, service: kestrel, classes: [xxe], paths: [/api/v1/quote/bulk], tier: 2, auth: none, input: "XML body"}
+  - {id: D8, title: XXE in the bulk quote API, service: kestrel, classes: [xxe, ssrf], paths: [/api/v1/quote/bulk], tier: 2, auth: none, input: "XML body"}
   - {id: D9, title: PHP object injection in the preferences cookie, service: kestrel, classes: [deserialization], params: [kc_prefs], needs: [chain], tier: 3, auth: none, input: "cookie kc_prefs"}
   - {id: D10, title: Development mail outbox exposed, service: kestrel, classes: [exposed_endpoint, auth_bypass], paths: [/_outbox], tier: 1, auth: none}
   - {id: D11, title: Password reset token compared loosely (type juggling), service: kestrel, classes: [auth_bypass], paths: [/api/v1/account/reset/confirm], tier: 3, auth: none, input: "JSON token"}
-  - {id: D12, title: Upload of a .phtml script runs as code, service: kestrel, classes: [file_upload, command_injection], paths: [/staff/pod/upload, /uploads/pod], tier: 2, auth: staff, input: "file name"}
+  - {id: D12, title: Upload of a .phtml script runs as code, service: kestrel, classes: [file_upload, command_injection, xss], paths: [/staff/pod/upload, /uploads/pod], tier: 2, auth: staff, input: "file name"}
   - {id: D13, title: IDOR on manifests behind an MD5 reference, service: kestrel, classes: [idor], paths: [/staff/manifest], tier: 2, auth: staff, input: "query m (md5 of the number)"}
   - {id: D14, title: Administrator role taken from an unsigned cookie, service: kestrel, classes: [privilege_escalation, auth_bypass, idor], paths: [/admin], tier: 2, auth: staff, input: "cookie kc_role"}
 negatives:

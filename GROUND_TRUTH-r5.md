@@ -93,6 +93,17 @@ Seed accounts, for runs with supplied credentials:
   → the `TemplateCache` gadget → D9 writes a script under `/uploads/pod/`.
 - **SSRF to internal keys:** D7 reaches the key service on `127.0.0.1:8081`,
   which no port publishes.
+- **Escalations scored as the same item:** D6 includes what it reads, so a
+  review stored in the database file (`kc_lang=....//` up to
+  `/var/lib/kestrel/kestrel.db`) runs as PHP: code execution through D6. D8's
+  `php://filter/resource=http://...` fetches URLs: SSRF through D8. D12 also
+  stores `.html` and `.svg`, served from the site's origin: stored XSS through
+  D12. A finding of these classes on the item's input counts as that item.
+- **What the file reads cannot see:** the seed (passwords, canaries) is
+  readable by root only and the key service runs as its own user, so D5, D6
+  and D8 do not give D7's canary or a password away. The database file is
+  readable (the site uses it): the canaries of D1, D2, D13 and D14 are in it,
+  so those items are scored by where the finding is, not by the canary alone.
 
 ## Lab E: Stagehand (React 18 + Vite, Node 22 + Express 4)
 
@@ -127,7 +138,7 @@ with `email` and `password`, then `Authorization: Bearer <token>`):
 |---|---|---|---|---|---|---|
 | E1 | 1 | Secret in the bundle; source maps served | `/assets/Checkout-*.js`, `/assets/*.js.map` | the key is in a lazy chunk that the first page does not load | read the chunks named in the entry script | `SH-E01-7c3a91be` |
 | E2 | 3 | DOM XSS | `/#/events?notice=` | the value is in the address fragment and never reaches the server; `<script>` blocks are stripped before `dangerouslySetInnerHTML`; needs a browser | `<img src=x onerror=...>` | the handler runs in the page (it can read `window.__stagehand.build`, `SH-E02-4d0f6a27`) |
-| E3 | 2 | Stored XSS | `POST /svc/v3/events/:id/reviews` (`body`, markdown), shown on the event page | the sanitizer removes `<script>`, `javascript:` and lower-case `on...=` handlers | `<img src=x oNerror=alert(document.domain)>` | the handler in `GET /svc/v3/events/:id/reviews` |
+| E3 | 2 | Stored XSS | `POST /svc/v3/events/:id/reviews` (`body`, markdown), shown on the event page | the sanitizer removes `<script>`, `javascript:` and lower-case `on...=` handlers after whitespace (`<img/onerror=...>` passes too) | `<img src=x oNerror=alert(document.domain)>` | the handler in `GET /svc/v3/events/:id/reviews` |
 | E4 | 2 | NoSQL operator injection | `GET /svc/v3/tickets/lookup?ref=` | a string is safe; bracket syntax arrives as an object and is read as a query operator | `ref[$ne]=x` (or `ref[$regex]=^TK`) returns every ticket with its buyer | `SH-E04-b81e5c02` in the note of `TK-9B7F21` |
 | E5 | 3 | GraphQL: missing authorization | `POST /svc/v3/gql` (named only in the console chunk) | introspection is off; the validator's "Did you mean" hints still name the fields | `{ members { email role signInLink } }`; `POST /svc/v3/auth/magic {"token"}` with a leaked link's token is a session | `SH-E05-2f9d0c64`, the owner's token |
 | E6 | 2 | Open redirect | `GET /r?to=` | the target must start with `/`, and `//` is refused | `/r?to=/\evil.test/x`: URL parsers read the backslash as a slash | `Location: /\evil.test/x` |
@@ -165,8 +176,17 @@ makes one, so the shape of a reference can be seen.
   signed-in item is reachable as admin.
 - **Sign-up to payouts:** E11 gives a member session, E12 reads the payouts.
 
-Evidence can cross: E8 also reads `/proc/self/environ` (the proof of E14), and
-code execution through E10 or E14 reads any file.
+Evidence can cross: E8 also reads `/proc/self/environ` (the proof of E14) and
+the server source under `/app` (the canaries of E4, E5, E7, E9, E11, E12 and
+E13, and `/app/private/qr-signing.key` of E10), and code execution through E10
+or E14 reads any file. With supplied credentials the member and organizer
+canaries (E11, E12, E13) appear without the flaw. So Lab E is scored by where
+a finding is, not by a canary alone.
+
+A template loop sent to E14 blocks the only Node process; the container's
+watchdog restarts the API when the site has not answered for 30 s, and the
+restart re-seeds the data. Code execution runs as `node`, which cannot change
+the application.
 
 ## What these labs exercise in a scanner
 

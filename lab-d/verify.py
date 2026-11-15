@@ -209,7 +209,7 @@ def d13(site, state):
     _, _, own = site.call('GET', '/staff/manifest?m=' + hashlib.md5(b'41').hexdigest(), cookies=session)
     _, _, other = site.call('GET', '/staff/manifest?m=' + hashlib.md5(b'42').hexdigest(), cookies=session)
     anonymous, _, _ = site.call('GET', '/staff/manifest?m=' + hashlib.md5(b'42').hexdigest())
-    ok = 'Harbour Way' in own and 'KC-D13-5e8b20f7' in other and anonymous == 302
+    ok = 'R. Hale, 4 Mast Close' in own and 'KC-D13-5e8b20f7' in other and anonymous == 302
     return ok, "another depot's manifest opens by the MD5 of its number"
 
 
